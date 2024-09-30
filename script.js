@@ -97,6 +97,7 @@ function getLearnerData(course, ag, submissions) {
   
 const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
   
+
 console.log(result);
   
   
