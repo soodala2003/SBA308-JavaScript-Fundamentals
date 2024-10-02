@@ -127,9 +127,9 @@ function dueDate(assignment, learner) {
     }
 }
 
-function duePass(assignment, learner, counts) {
-    let isPassDue = true;
-    if (assignment.id === learner.saaignment_id) {
+function duePass(assignment, learner, counts) {  //assignment = AssignmentInfo
+    let isPassDue = true;                        //learner = LearnerSubmissions
+    if (assignment.id === learner.assignment_id) {
         if (assignment[counts].due_at < learner[counts].submission.submitted_at) {
             isPassDue = true;
         } else if (assignment[counts].due_at >= learner[counts].submission.submitted_at) {
@@ -144,6 +144,7 @@ function learnersScore(assignmentData, learner) {
     let learners = learner1.concat(learner_132);
     return learners;
 }
+
 const scoresObject = learnersScore(AssignmentInfo, LearnerSubmissions); 
 
 function points(ag) { //ag = AssignmentInfo
@@ -154,7 +155,7 @@ function points(ag) { //ag = AssignmentInfo
         k++;
     }
     return possiblePoints;
-}
+} 
 
 function learnerID(learner) {
     let id = [];
@@ -168,30 +169,29 @@ function scoreAg1(ag, submissions) {                                 // ag = Ass
     const scoresObject = learnersScore(ag.assignments, submissions); //AssignmentInfo = ag.assignments
     let scores1 = [];       
 
-    scores1.push(scoresObject[0].submission.score / points(ag.assignments)[0]);
-    scores1.push(scoresObject[2].submission.score /points(ag.assignments)[0]);
+    for (let j = 0; j < scoresObject.length; j+=2) {
+        scores1.push(scoresObject[j].submission.score / points(ag.assignments)[0]);
+    }
     return scores1;   
 }
 
 function scoreAg2(ag, submissions) {                                 // ag = AssignmentGroup
     const scoresObject = learnersScore(ag.assignments, submissions); //AssignmentInfo = ag.assignments
     let scores2 = [];  
-
     scores2.push(scoresObject[1].submission.score / points(ag.assignments)[1]);
     scores2.push((scoresObject[3].submission.score - (0.1*points(ag.assignments)[1])) /points(ag.assignments)[1]);
     scores2.splice(1, 1, parseFloat(scores2[1].toFixed(3)));
     return scores2;   
-}
+} 
 
 function avg(ag, submissions) {
     let average = [];
     average.push((scoresObject[0].submission.score + scoresObject[1].submission.score) / (points(ag.assignments)[0] + points(ag.assignments)[1]));
     average.push((scoresObject[2].submission.score + scoresObject[3].submission.score - (0.1*points(ag.assignments)[1])) / (points(ag.assignments)[0] + points(ag.assignments)[1]));
     return average;
-}
+} 
 
 function getLearnerData(course, ag, submissions) {  // ag = AssignmentGroup
-    //const mapObject = filteredObject.map(({ id, name, occupation, age}) => ({ id: id, name: name, job: occupation, age: age})); 
     matchCourseID(course, ag);                      // (CourseInfo, AssignmentGroup)
     let id = learnerID(submissions);                // AssignmentInfo = ag.assignments
     const learnerData = [];
@@ -199,37 +199,10 @@ function getLearnerData(course, ag, submissions) {  // ag = AssignmentGroup
     const ag1Scores = scoreAg1(ag, submissions);
     const ag2Scores = scoreAg2(ag, submissions);
     const average = avg(ag, submissions);
-
-    for (let i = 0; i < id.length; i ++) {
-        learnerData.push({ id: id[i], avg: average[i], 1: ag1Scores[i], 2: ag2Scores[i] });
-    }
-
-    let sortObj = function sortObj(obj) {
-        let keys = [];
-        for (let key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                keys.push(key);
-            }
-        }
-        keys.sort();
     
-        let newObj = {};
-        for (let i = 0; i < keys.length; i++) {
-            newObj[keys[i]] = obj[keys[i]];
-        }
-        return newObj;
-    }
-
-    for (let j = 0; j < learnerData.length; j++) {
-        console.log(sortObj(learnerData[j]));
+    for (let i = 0; i < id.length; i ++) {
+        learnerData.push({ id: id[i], avg: average[i], ag1: ag1Scores[i], ag2: ag2Scores[i] });
     }
     return learnerData; 
 }
 console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
-
-
-// console.log(scoresObject[0].submission.score);
-// console.log("Hi!!!");
-// console.log(AssignmentInfo[0].points_possible);
-// console.log(Object.values(scoresObject[0]));
-
