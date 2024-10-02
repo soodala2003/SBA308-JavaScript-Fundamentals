@@ -99,17 +99,9 @@ const LearnerSubmissions = [
 //console.log(result);
   
 /* my codeing */
-console.log(LearnerSubmissions[0].learner_id);  // id: 125
-console.log(LearnerSubmissions[0].submission.score);  // 47
-//console.log(AssignmentGroup.assignments[0].points_possible);       // 50
-//console.log(AssignmentGroup.assignments[0]["points_possible"]);  // 50
-
 const AssignmentInfo = AssignmentGroup.assignments;
-console.log(LearnerSubmissions.filter(item => item.learner_id === 125));
-
 const learner_125 = LearnerSubmissions.filter(item => item.learner_id === 125);
 const learner_132 = LearnerSubmissions.filter(item => item.learner_id === 132);
-console.log(learner_132);
 
 function matchCourseID(course, assignment) {
     try {
@@ -124,7 +116,6 @@ function matchCourseID(course, assignment) {
         console.log("Course ID: " + course.id + ".");
     }
 } 
-//console.log(matchCourseID(CourseInfo, AssignmentGroup));
 
 function dueDate(assignment, learner) {
     const date = new Date();
@@ -148,38 +139,97 @@ function duePass(assignment, learner, counts) {
     } 
 }
 
-dueDate(AssignmentInfo, learner_125);
-dueDate(AssignmentInfo, learner_132);
+function learnersScore(assignmentData, learner) {
+    let learner1 = dueDate(assignmentData, learner.filter(item => item.learner_id === 125));
+    let learners = learner1.concat(learner_132);
+    return learners;
+}
+const scoresObject = learnersScore(AssignmentInfo, LearnerSubmissions); 
 
-function getLearnerData(assignment, learner) {
-    let count = 0;
-    let learnerTotal = 0;
-    let scores = 0;
-    let average = 0;
-    let grade = [];
-    let result = [];
-
-    while(count < learner.length) {
-        let possiblePoints = assignment[count].points_possible;
-        let submissionPoints = learner[count].submission.score;
-        if (duePass(assignment, learner, count) === true) {
-            grade[count] = (submissionPoints - (0.1 * possiblePoints)) / possiblePoints;
-            scores += submissionPoints - (0.1 * possiblePoints);
-            learnerTotal += possiblePoints;
-            count++;
-        } else if (duePass(assignment, learner, count) === false) {
-            grade[count] = submissionPoints / possiblePoints;
-            scores += submissionPoints;
-            learnerTotal += possiblePoints;
-            count++;
-        }   
+function points(ag) { //ag = AssignmentInfo
+    const possiblePoints = [];
+    let k = 0;
+    while (k < ag.length) {
+        possiblePoints.push(ag[k].points_possible); 
+        k++;
     }
-    average = scores / learnerTotal; 
-    result = {id: learner[0].learner_id, avg: average, 1: grade[0], 2: grade[1]  };
-    return result;
+    return possiblePoints;
 }
 
-console.log(getLearnerData(AssignmentInfo, learner_125)); // { '1': 0.94, '2': 1, id: 125, avg: 0.985 }
-console.log(getLearnerData(AssignmentInfo, learner_132)); // { '1': 0.78, '2': 0.8333333333333334, id: 132, avg: 0.82 }
-console.log(learner_125);
+function learnerID(learner) {
+    let id = [];
+    for (let i = 1; i < learner.length; i+=2) {
+        id.push(learner[i].learner_id);
+    }           
+    return id;
+}
+
+function scoreAg1(ag, submissions) {                                 // ag = AssignmentGroup
+    const scoresObject = learnersScore(ag.assignments, submissions); //AssignmentInfo = ag.assignments
+    let scores1 = [];       
+
+    scores1.push(scoresObject[0].submission.score / points(ag.assignments)[0]);
+    scores1.push(scoresObject[2].submission.score /points(ag.assignments)[0]);
+    return scores1;   
+}
+
+function scoreAg2(ag, submissions) {                                 // ag = AssignmentGroup
+    const scoresObject = learnersScore(ag.assignments, submissions); //AssignmentInfo = ag.assignments
+    let scores2 = [];  
+
+    scores2.push(scoresObject[1].submission.score / points(ag.assignments)[1]);
+    scores2.push((scoresObject[3].submission.score - (0.1*points(ag.assignments)[1])) /points(ag.assignments)[1]);
+    scores2.splice(1, 1, parseFloat(scores2[1].toFixed(3)));
+    return scores2;   
+}
+
+function avg(ag, submissions) {
+    let average = [];
+    average.push((scoresObject[0].submission.score + scoresObject[1].submission.score) / (points(ag.assignments)[0] + points(ag.assignments)[1]));
+    average.push((scoresObject[2].submission.score + scoresObject[3].submission.score - (0.1*points(ag.assignments)[1])) / (points(ag.assignments)[0] + points(ag.assignments)[1]));
+    return average;
+}
+
+function getLearnerData(course, ag, submissions) {  // ag = AssignmentGroup
+    //const mapObject = filteredObject.map(({ id, name, occupation, age}) => ({ id: id, name: name, job: occupation, age: age})); 
+    matchCourseID(course, ag);                      // (CourseInfo, AssignmentGroup)
+    let id = learnerID(submissions);                // AssignmentInfo = ag.assignments
+    const learnerData = [];
+    const scoresObject = learnersScore(ag.assignments, submissions);
+    const ag1Scores = scoreAg1(ag, submissions);
+    const ag2Scores = scoreAg2(ag, submissions);
+    const average = avg(ag, submissions);
+
+    for (let i = 0; i < id.length; i ++) {
+        learnerData.push({ id: id[i], avg: average[i], 1: ag1Scores[i], 2: ag2Scores[i] });
+    }
+
+    let sortObj = function sortObj(obj) {
+        let keys = [];
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                keys.push(key);
+            }
+        }
+        keys.sort();
+    
+        let newObj = {};
+        for (let i = 0; i < keys.length; i++) {
+            newObj[keys[i]] = obj[keys[i]];
+        }
+        return newObj;
+    }
+
+    for (let j = 0; j < learnerData.length; j++) {
+        console.log(sortObj(learnerData[j]));
+    }
+    return learnerData; 
+}
+console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
+
+
+// console.log(scoresObject[0].submission.score);
+// console.log("Hi!!!");
+// console.log(AssignmentInfo[0].points_possible);
+// console.log(Object.values(scoresObject[0]));
 
