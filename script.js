@@ -103,6 +103,7 @@ const AssignmentInfo = AssignmentGroup.assignments;
 const learner_125 = LearnerSubmissions.filter(item => item.learner_id === 125);
 const learner_132 = LearnerSubmissions.filter(item => item.learner_id === 132);
 
+// throw an error if course id is mismatching and the input was invalid
 function matchCourseID(course, assignment) {
     try {
         if (course.id === assignment.course_id) {
@@ -117,6 +118,7 @@ function matchCourseID(course, assignment) {
     }
 } 
 
+// check if an assignment is not yet due, and do not include the assignment in the results or average 
 function dueDate(assignment, learner) {
     const date = new Date();
     for (let i = 0; i < learner.length; i++) {
@@ -127,6 +129,7 @@ function dueDate(assignment, learner) {
     }
 }
 
+// check if the learner's submission is late or not
 function duePass(assignment, learner, counts) {  //assignment = AssignmentInfo
     let isPassDue = true;                        //learner = LearnerSubmissions
     if (assignment.id === learner.assignment_id) {
@@ -139,14 +142,16 @@ function duePass(assignment, learner, counts) {  //assignment = AssignmentInfo
     } 
 }
 
-function learnersScore(assignmentData, learner) {
+// gather learners' data except for an assignment that is not yet due
+function learnersData(assignmentData, learner) {
     let learner1 = dueDate(assignmentData, learner.filter(item => item.learner_id === 125));
     let learners = learner1.concat(learner_132);
     return learners;
 }
 
-const scoresObject = learnersScore(AssignmentInfo, LearnerSubmissions); 
+const scoresObject = learnersData(AssignmentInfo, LearnerSubmissions); 
 
+// collect the possible point for each assignment
 function points(ag) { //ag = AssignmentInfo
     const possiblePoints = [];
     let k = 0;
@@ -157,6 +162,7 @@ function points(ag) { //ag = AssignmentInfo
     return possiblePoints;
 } 
 
+// collect the learners' id 
 function learnerID(learner) {
     let id = [];
     for (let i = 1; i < learner.length; i+=2) {
@@ -165,8 +171,9 @@ function learnerID(learner) {
     return id;
 }
 
+// get scores of each assignment1
 function scoreAg1(ag, submissions) {                                 // ag = AssignmentGroup
-    const scoresObject = learnersScore(ag.assignments, submissions); //AssignmentInfo = ag.assignments
+    const scoresObject = learnersData(ag.assignments, submissions); //AssignmentInfo = ag.assignments
     let scores1 = [];       
 
     for (let j = 0; j < scoresObject.length; j+=2) {
@@ -175,8 +182,9 @@ function scoreAg1(ag, submissions) {                                 // ag = Ass
     return scores1;   
 }
 
+// get scores of each assignment2 
 function scoreAg2(ag, submissions) {                                 // ag = AssignmentGroup
-    const scoresObject = learnersScore(ag.assignments, submissions); //AssignmentInfo = ag.assignments
+    const scoresObject = learnersData(ag.assignments, submissions); //AssignmentInfo = ag.assignments
     let scores2 = [];  
     scores2.push(scoresObject[1].submission.score / points(ag.assignments)[1]);
     scores2.push((scoresObject[3].submission.score - (0.1*points(ag.assignments)[1])) /points(ag.assignments)[1]);
@@ -184,6 +192,7 @@ function scoreAg2(ag, submissions) {                                 // ag = Ass
     return scores2;   
 } 
 
+// calculate the average
 function avg(ag, submissions) {
     let average = [];
     average.push((scoresObject[0].submission.score + scoresObject[1].submission.score) / (points(ag.assignments)[0] + points(ag.assignments)[1]));
@@ -191,18 +200,18 @@ function avg(ag, submissions) {
     return average;
 } 
 
+// get the results as an array of object
 function getLearnerData(course, ag, submissions) {  // ag = AssignmentGroup
     matchCourseID(course, ag);                      // (CourseInfo, AssignmentGroup)
     let id = learnerID(submissions);                // AssignmentInfo = ag.assignments
-    const learnerData = [];
-    const scoresObject = learnersScore(ag.assignments, submissions);
+    const results = [];
     const ag1Scores = scoreAg1(ag, submissions);
     const ag2Scores = scoreAg2(ag, submissions);
     const average = avg(ag, submissions);
     
     for (let i = 0; i < id.length; i ++) {
-        learnerData.push({ id: id[i], avg: average[i], ag1: ag1Scores[i], ag2: ag2Scores[i] });
+        results.push({ id: id[i], avg: average[i], ag1: ag1Scores[i], ag2: ag2Scores[i] });
     }
-    return learnerData; 
+    return results; 
 }
 console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
