@@ -212,6 +212,8 @@ function getLearnerData(course, ag, submissions) {  // ag = AssignmentGroup
     for (let i = 0; i < id.length; i ++) {
         results.push({ id: id[i], avg: average[i], ag1: ag1Scores[i], ag2: ag2Scores[i] });
     }
-    return results; 
+    //const res = results.map(({ id, avg, ag1, ag2}) => ({ id: id, avg: avg, 1: ag1, 2: ag2})); 
+    //return res;
+    return results;  
 }
 console.log(getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions));
