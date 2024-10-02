@@ -104,33 +104,54 @@ console.log(LearnerSubmissions[0].submission.score);  // 47
 //console.log(AssignmentGroup.assignments[0].points_possible);       // 50
 //console.log(AssignmentGroup.assignments[0]["points_possible"]);  // 50
 
-// both are the same results
-/* console.log("Accessing the Array using the forEach loop:");
-AssignmentGroup.assignments.map((item) => {
-    console.log(item);});
-console.log("Accessing the Array using the forEach loop:");
-AssignmentGroup.assignments.forEach(function (item) {
-    console.log(item);
-}); */
-
 const AssignmentInfo = AssignmentGroup.assignments;
-//console.log(AssignmentInfo);
-console.log(AssignmentInfo[0].points_possible);  // 50
+console.log(LearnerSubmissions.filter(item => item.learner_id === 125));
 
-console.log("Using the filter method to access a specific value:");
 const learner_125 = LearnerSubmissions.filter(item => item.learner_id === 125);
-console.log(learner_125);
-// console.log(learner_125[1].learner_id);        // 125
-// console.log(learner_125[2].submission.score);  // 400
 const learner_132 = LearnerSubmissions.filter(item => item.learner_id === 132);
-//console.log(learner_132);
-//console.log(AssignmentInfo[2].due_at);
+console.log(learner_132);
 
-const date = new Date();
-//console.log(new Date());
-//console.log(date.toISOString().substr(0, 10)); // 2024-09-30
+function matchCourseID(course, assignment) {
+    try {
+        if (course.id === assignment.course_id) {
+            console.log("The assignment group belongs to this course.")
+        } else {
+            throw "Error: This course ID is invalid!";
+        }
+    } catch (error) {
+        console.log(error);
+    } finally {
+        console.log("Course ID: " + course.id + ".");
+    }
+} 
+//console.log(matchCourseID(CourseInfo, AssignmentGroup));
 
-function getLearnerData(learner, assignment) {
+function dueDate(assignment, learner) {
+    const date = new Date();
+    for (let i = 0; i < learner.length; i++) {
+        if (assignment[i].due_at > date.toISOString().substr(0, 10)) {
+            learner.splice(i, 1);
+            return learner;
+        }
+    }
+}
+
+function duePass(assignment, learner, counts) {
+    let isPassDue = true;
+    if (assignment.id === learner.saaignment_id) {
+        if (assignment[counts].due_at < learner[counts].submission.submitted_at) {
+            isPassDue = true;
+        } else if (assignment[counts].due_at >= learner[counts].submission.submitted_at) {
+            isPassDue = false;
+        } 
+        return isPassDue;
+    } 
+}
+
+dueDate(AssignmentInfo, learner_125);
+dueDate(AssignmentInfo, learner_132);
+
+function getLearnerData(assignment, learner) {
     let count = 0;
     let learnerTotal = 0;
     let scores = 0;
@@ -139,33 +160,26 @@ function getLearnerData(learner, assignment) {
     let result = [];
 
     while(count < learner.length) {
-        if (assignment[count].id === learner[count].assignment_id) {
-            if (assignment[count].due_at > date.toISOString().substr(0, 10)) {
-                scores = scores;
-                learnerTotal = learnerTotal;
-                count++;
-            } else if (assignment[count].due_at < learner[count].submission.submitted_at) {
-                let lateGrade = learner[count].submission.score - (0.1 * assignment[count].points_possible);
-                grade[count] = lateGrade / assignment[count].points_possible;
-                scores += lateGrade;
-                learnerTotal += assignment[count].points_possible;
-                count++;
-            } else if (assignment[count].due_at >= learner[count].submission.submitted_at) {
-                grade[count] = learner[count].submission.score / assignment[count].points_possible;
-                scores += learner[count].submission.score;
-                learnerTotal += assignment[count].points_possible;
-                count++;
-            } else {
-                scores = scores;
-                learnerTotal = learnerTotal;
-                count++;
-            }
-        }
+        let possiblePoints = assignment[count].points_possible;
+        let submissionPoints = learner[count].submission.score;
+        if (duePass(assignment, learner, count) === true) {
+            grade[count] = (submissionPoints - (0.1 * possiblePoints)) / possiblePoints;
+            scores += submissionPoints - (0.1 * possiblePoints);
+            learnerTotal += possiblePoints;
+            count++;
+        } else if (duePass(assignment, learner, count) === false) {
+            grade[count] = submissionPoints / possiblePoints;
+            scores += submissionPoints;
+            learnerTotal += possiblePoints;
+            count++;
+        }   
     }
     average = scores / learnerTotal; 
     result = {id: learner[0].learner_id, avg: average, 1: grade[0], 2: grade[1]  };
     return result;
 }
 
-console.log(getLearnerData(learner_125, AssignmentInfo)); // { '1': 0.94, '2': 1, id: 125, avg: 0.985 }
-console.log(getLearnerData(learner_132, AssignmentInfo)); // { '1': 0.78, '2': 0.8333333333333334, id: 132, avg: 0.82 }
+console.log(getLearnerData(AssignmentInfo, learner_125)); // { '1': 0.94, '2': 1, id: 125, avg: 0.985 }
+console.log(getLearnerData(AssignmentInfo, learner_132)); // { '1': 0.78, '2': 0.8333333333333334, id: 132, avg: 0.82 }
+console.log(learner_125);
+
